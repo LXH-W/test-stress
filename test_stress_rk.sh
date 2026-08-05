@@ -59,6 +59,13 @@ run_memory_test() {
     test_memory=$((available_memory * 80 / 100))
 
     # 内存全模式老化测试，占用80%可用内存并锁定物理页防swap
+
+    # oom 参数说明：
+    # --oom-avoid：尽量避免进程被 OOM Killer 杀掉
+    # --oom-avoid-bytes：预留指定大小的空闲内存，阻止继续分配，防止触发 OOM
+    # 1. 低版本不支持oom，报错移除oom-avoid和oom-avoid-bytes
+    # 2. 内存太小，建议oom-avoid-bytes改成到100~200左右
+
     stress-ng --vm 1 \
     --vm-bytes ${test_memory}M \
     --vm-method all \
@@ -123,10 +130,10 @@ get_system_status(){
 
     # 计算使用百分比（保留整数）
     memory_usage_percent=$((used_memory * 100 / total_memory))
-    
-    # 转换为 GB（保留1位小数）
-    used_memory_gb=$(echo "scale=1; ${used_memory} / 1024" | bc)
-    total_memory_gb=$(echo "scale=1; ${total_memory} / 1024" | bc)
+
+    # 转换为 GB（保留1位小数，补前导零）
+    used_memory_gb=$(echo "scale=1; ${used_memory} / 1024" | bc | sed 's/^\./0./')
+    total_memory_gb=$(echo "scale=1; ${total_memory} / 1024" | bc | sed 's/^\./0./')
 
     # 5.获取GPU当前使用率
     gpu_load_raw=$(cat /sys/devices/platform/*.gpu/devfreq/*.gpu/load 2>/dev/null)
