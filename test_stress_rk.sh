@@ -136,22 +136,22 @@ get_system_status(){
         gpu_usage_percent="---"
     fi
 
-    # 清屏
-    clear
-    echo "============================================="
-    echo "   [Burn-in Test] System Real-Time Monitor"
-    echo "============================================="
-    echo "Up Time:       $(printf "%02d:%02d:%02d" $1 $2 $3)"
-    echo "============================================="
-    echo "CPU Usage:     ${cpu_usage_percent} %"
-    echo "CPU Temp:      ${cpu_temp} °C "
-    echo "CPU Cur Freq:  ${cpu_cur_freq} MHz"
-    echo "============================================="
-    echo "Memory Usage:  ${memory_usage_percent} %"
-    echo "Used/Total:    ${used_memory_gb}/${total_memory_gb} GB"
-    echo "============================================="
-    echo "GPU Usage:     ${gpu_usage_percent} %"
-    echo "============================================="
+    # \033[2K 清除当前行，\033[H 光标回到行首
+    printf "\033[H"
+    printf "\033[2K=============================================\n"
+    printf "\033[2K   [Burn-in Test] System Real-Time Monitor\n"
+    printf "\033[2K=============================================\n"
+    printf "\033[2KUp Time:       $(printf "%02d:%02d:%02d" $1 $2 $3)\n"
+    printf "\033[2K=============================================\n"
+    printf "\033[2KCPU Usage:     ${cpu_usage_percent} %%\n"
+    printf "\033[2KCPU Temp:      ${cpu_temp} °C\n"
+    printf "\033[2KCPU Cur Freq:  ${cpu_cur_freq} MHz\n"
+    printf "\033[2K=============================================\n"
+    printf "\033[2KMemory Usage:  ${memory_usage_percent} %%\n"
+    printf "\033[2KUsed/Total:    ${used_memory_gb}/${total_memory_gb} GB\n"
+    printf "\033[2K=============================================\n"
+    printf "\033[2KGPU Usage:     ${gpu_usage_percent} %%\n"
+    printf "\033[2K=============================================\n"
 }
 
 
@@ -181,6 +181,19 @@ check_stress_processes() {
 }
 
 
+cleanup() {
+    # 显示光标
+    tput cnorm
+    # 杀死所有 stress-ng 进程和 glmark2-es2 进程
+    sleep 2
+    pkill -TERM -f "stress-ng"
+    pkill -TERM -f "glmark2-es2"
+    sleep 2
+    printf "\n"
+    exit 0
+}
+
+
 run_test() {
     # 记录开始
     touch ${AGING_BASE_DIR}/start_state.zz
@@ -201,6 +214,11 @@ run_test() {
 
     # 隐藏光标
     tput civis
+    # 捕捉到Ctrl+C信号,执行cleanup函数
+    trap cleanup SIGINT
+    # 清除屏幕
+    clear
+    sleep 1
 
     # 循环直到老化时间结束
     while true; do
