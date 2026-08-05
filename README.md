@@ -18,8 +18,23 @@
 
 安装示例（Debian/Ubuntu）：
 ```bash
-sudo apt update
-sudo apt install stress-ng glmark2-es2 bc figlet
+stress-ng：
+tar -xvzf stress-ng-0.18.06.tar.gz
+cd stress-ng-0.18.06
+make -j$(nproc)
+sudo make install
+
+figlet:
+tar -xvzf figlet-2.2.5.tar.gz
+cd figlet-2.2.5
+make
+sudo make install
+
+glmark2-es2：
+sudo dpkg -i glmark2-es2.deb
+
+bc:
+sudo dpkg -i bc_arm64.deb
 ```
 
 ## 运行
