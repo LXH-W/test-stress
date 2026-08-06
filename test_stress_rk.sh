@@ -40,8 +40,8 @@ done
 
 # CPU老化测试
 run_cpu_test() {
-    # 在 aging_time 基础上增加 3 秒缓冲
-    local cpu_duration=$((aging_time + 3))
+    # 在 aging_time 基础上增加 8 秒缓冲
+    local cpu_duration=$((aging_time + 8))
 
     # 满负载，自动轮询所有测试方法
     stress-ng --cpu $(nproc) --metrics-brief --timeout ${cpu_duration}s >> ${stress_ng} 2>&1
@@ -52,19 +52,13 @@ run_cpu_test() {
 
 # 内存老化测试
 run_memory_test() {
-    local mem_duration=$((aging_time + 3))
+    local mem_duration=$((aging_time + 8))
 
     available_memory=$(free -m | grep -E 'Mem|内存' | awk '{print $7}')
-    # 使用 80% 左右的内存测试
-    test_memory=$((available_memory * 80 / 100))
+    # 使用 70% 左右的内存测试
+    test_memory=$((available_memory * 70 / 100))
 
-    # 内存全模式老化测试，占用80%可用内存并锁定物理页防swap
-
-    # oom 参数说明：
-    # --oom-avoid：尽量避免进程被 OOM Killer 杀掉
-    # --oom-avoid-bytes：预留指定大小的空闲内存，阻止继续分配，防止触发 OOM
-    # 1. 低版本不支持oom，报错移除oom-avoid和oom-avoid-bytes
-    # 2. 内存太小，建议oom-avoid-bytes改成到100~200左右
+    # 内存全模式老化测试，占用70%可用内存并锁定物理页防swap
 
     stress-ng --vm 1 \
     --vm-bytes ${test_memory}M \
@@ -72,8 +66,6 @@ run_memory_test() {
     --vm-keep \
     --vm-populate \
     --vm-locked \
-    --oom-avoid \
-    --oom-avoid-bytes 512M \
     --metrics-brief \
     --timeout ${mem_duration}s \
     >> ${stress_ng} 2>&1
@@ -84,7 +76,7 @@ run_memory_test() {
 
 # GPU老化测试
 run_gpu_test() {
-    local gpu_duration=$((aging_time + 3))
+    local gpu_duration=$((aging_time + 8))
 
     # 配置文件用户为空, 直接使用当前账号
     if [[ -n "${user}" ]]; then
