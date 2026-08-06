@@ -44,7 +44,7 @@ run_cpu_test() {
     local cpu_duration=$((aging_time + 8))
 
     # 满负载，自动轮询所有测试方法
-    stress-ng --cpu $(nproc) --metrics-brief --timeout ${cpu_duration}s >> ${stress_ng} 2>&1
+    stress-ng --cpu $(nproc) --cpu-method all --metrics-brief --timeout ${cpu_duration}s >> ${stress_ng} 2>&1
 
     sleep 2
 }
@@ -58,7 +58,10 @@ run_memory_test() {
     # 使用 70% 左右的内存测试
     test_memory=$((available_memory * 70 / 100))
 
-    # 内存全模式老化测试，占用70%可用内存并锁定物理页防swap
+    # --vm-method all 轮询所有内存测试模式
+    # --vm-keep 保持内存分配，避免反复申请释放，压力更集中
+    # --vm-populate 立即填充物理页，避免缺页中断影响压力稳定性
+    # --vm-locked 锁定物理内存，防止被换出（无swap环境无实际效果但无害）
 
     stress-ng --vm 1 \
     --vm-bytes ${test_memory}M \
