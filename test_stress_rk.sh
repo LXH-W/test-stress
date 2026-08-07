@@ -163,6 +163,7 @@ check_stress_processes() {
         pkill -TERM -f "stress-ng"
         pkill -TERM -f "glmark2-es2"
         echo -e "\033[31m Error: stress-ng-cpu process abnormal, aging test failed. \033[0m"
+        tput cnorm
         exit 1
     fi
 
@@ -170,7 +171,8 @@ check_stress_processes() {
     if ! pgrep -x "stress-ng-vm" > /dev/null 2>&1; then
         pkill -TERM -f "stress-ng"
         pkill -TERM -f "glmark2-es2"
-        echo -e "\033[31m Error: stress-ng-vm process abnormal, aging test failed. \033[0m" 
+        echo -e "\033[31m Error: stress-ng-vm process abnormal, aging test failed. \033[0m"
+        tput cnorm
         exit 1
     fi
 
@@ -178,6 +180,7 @@ check_stress_processes() {
     if ! pgrep -x "glmark2-es2" > /dev/null 2>&1; then
         pkill -TERM -f "stress-ng"
         echo -e "\033[31m Error: glmark2-es2 process abnormal, aging test failed. \033[0m"
+        tput cnorm
         exit 1
     fi
 }
