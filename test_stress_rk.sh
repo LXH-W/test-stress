@@ -30,7 +30,7 @@ stress_ng="${AGING_BASE_DIR}/stress_ng.log"
 
 
 # 检查依赖工具
-for cmd in stress-ng figlet glmark2-es2 bc; do
+for cmd in stress-ng figlet glmark2-es2 awk; do
     if ! command -v "${cmd}" &> /dev/null; then
         echo -e "\033[31m Error: ${cmd} is not installed \033[0m"
         exit 1
@@ -89,7 +89,7 @@ run_gpu_test() {
     fi
     user_id=$(sudo -u ${user_name} id -u)
     su ${user_name} -c "export XDG_RUNTIME_DIR=/run/user/${user_id} && timeout ${gpu_duration} glmark2-es2 --run-forever --annotate > /dev/null 2>&1"
-
+    # 默认尺寸800x600，可通过 -s 1920x1080 设置尺寸
     sleep 2
 }
 
@@ -101,7 +101,7 @@ get_system_status(){
     # 2. 获取CPU当前温度
     cpu_temp_raw=$(cat /sys/devices/virtual/thermal/thermal_zone0/temp 2>/dev/null)
     if [[ -n "${cpu_temp_raw}" ]]; then
-        cpu_temp=$(echo "scale=1; ${cpu_temp_raw} / 1000" | bc)
+        cpu_temp=$(awk "BEGIN {printf \"%.1f\", ${cpu_temp_raw} / 1000}")
     else
         cpu_temp="---"
     fi
@@ -109,7 +109,7 @@ get_system_status(){
     # 3. 获取CPU当前实时频率
     cpu_cur_freq_raw=$(cat /sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq 2>/dev/null)
     if [[ -n "${cpu_cur_freq_raw}" ]]; then
-        cpu_cur_freq=$(echo "scale=2; ${cpu_cur_freq_raw} / 1000" | bc)
+        cpu_cur_freq=$(awk "BEGIN {printf \"%.2f\", ${cpu_cur_freq_raw} / 1000}")
     else
         cpu_cur_freq="---"
     fi
@@ -120,15 +120,15 @@ get_system_status(){
     total_memory=$(echo "${memory_info}" | grep -E 'Mem|内存' | awk '{print $2}')
     available_memory=$(echo "${memory_info}" | grep -E 'Mem|内存' | awk '{print $7}')
 
-    # 计算已使用内存（单位：MB）
+    # 计算已使用内存（单位：MiB）
     used_memory=$((total_memory - available_memory))
 
-    # 计算使用百分比（保留整数）
-    memory_usage_percent=$((used_memory * 100 / total_memory))
+    # 计算使用百分比
+    memory_usage_percent=$(awk "BEGIN {printf \"%.0f\", ${used_memory} * 100 / ${total_memory}}")
 
-    # 转换为 GB（保留1位小数，补前导零）
-    used_memory_gb=$(echo "scale=1; ${used_memory} / 1024" | bc | sed 's/^\./0./')
-    total_memory_gb=$(echo "scale=1; ${total_memory} / 1024" | bc | sed 's/^\./0./')
+    # 转换为 GB（保留1位小数）
+    used_memory_gb=$(awk "BEGIN {printf \"%.1f\", ${used_memory} / 1024}")
+    total_memory_gb=$(awk "BEGIN {printf \"%.1f\", ${total_memory} / 1024}")
 
     # 5.获取GPU当前使用率
     gpu_load_raw=$(cat /sys/devices/platform/*.gpu/devfreq/*.gpu/load 2>/dev/null)
@@ -203,7 +203,7 @@ run_test() {
     # 记录开始
     touch ${AGING_BASE_DIR}/start_state.zz
     # 小时转换秒
-    aging_time=$(echo "scale=0; ${set_aging_time} * 60 * 60 / 1" | bc)
+    aging_time=$(awk "BEGIN {printf \"%.0f\", ${set_aging_time} * 60 * 60}")
     # 记录开始测试时间和老化测试时长
     echo "start time: $(date)" >> ${log_file}
     echo "Aging duration: ${aging_time}S" >> ${log_file}
